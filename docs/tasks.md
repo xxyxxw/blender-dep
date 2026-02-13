@@ -28,13 +28,13 @@
     - `title`, `image_url` (コピーしたURL) などを入力。
 
 ## フェーズ 4: デプロイと検証 (Render)
-- [ ] **[AI/User]** ローカルサーバー (Live Server等) で `index.html` を開き動作確認。
-- [/] **[User]** GitHub にリポジトリを作成し、コードをプッシュする。
-    - `git init`
-    - `git add .`
-    - `git commit -m "Initial commit"`
-    - `git remote add origin https://github.com/xxyxxw/blender-dep`
-    - `git push -u origin main`
+- [x] **[AI/User]** ローカルサーバー (Live Server等) で `index.html` を開き動作確認。
+- [x] **[User]** GitHub にリポジトリを作成し、コードをプッシュする (Privateリポジトリのため認証が必要)。
+    - `git init` (完了)
+    - `git add .` (完了)
+    - `git commit -m "Initial commit"` (完了)
+    - `git remote add origin ...` (完了)
+    - `git push -u origin main` (完了)
 - [ ] **[User]** Render ダッシュボード (https://dashboard.render.com/) で `New +` > `Blueprint` を選択。
 - [ ] **[User]** GitHub リポジトリを接続し、`render.yaml` が自動検出されることを確認してデプロイ。
 - [ ] **[User]** 公開されたURLで動作確認。
