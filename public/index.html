@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blender Portfolio</title>
+    <meta name="description" content="My Blender 3D Artworks Portfolio">
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Supabase JS (CDN) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+
+    <header class="header">
+        <div class="container">
+            <h1 class="logo">Blender Works</h1>
+            <nav class="nav">
+                <!-- Future navigation items -->
+            </nav>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <!-- Filter/Tags Section (Future) -->
+
+            <!-- Gallery Grid -->
+            <div id="gallery" class="gallery-grid">
+                <!-- Items will be injected here by JS -->
+                <div class="loading-state">Loading works...</div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 My Blender Portfolio</p>
+        </div>
+    </footer>
+
+    <!-- Lightbox Overlay -->
+    <div id="lightbox" class="lightbox">
+        <span class="lightbox-close">&times;</span>
+        <img class="lightbox-content" id="lightbox-img">
+    </div>
+
+    <!-- Scripts -->
+    <!-- Type module allows us to use import/export -->
+    <script type="module" src="js/app.js"></script>
+
+</body>
+
+</html>

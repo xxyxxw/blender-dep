@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: blender-portfolio
+    env: static
+    staticPublishPath: ./public
+    plan: free
