@@ -38,7 +38,7 @@
 | `description` | Text        | Nullable         | 作品の説明                                |
 | `date`        | Date        | Nullable         | 作品の制作日 (ソート用)                   |
 | `tags`        | Text Array  | Nullable         | タグのリスト (例: `['Character', 'Sci-Fi']`) |
-| `image_url`   | Text        | Not Null         | Storage内の画像の公開URL                  |
+| `image_urls`  | Text Array  | Not Null         | Storage内の画像の公開URLリスト (1つ目はサムネイル) |
 | `model_url`   | Text        | Nullable         | 3DモデルファイルへのURL                   |
 | `created_at`  | Timestamptz | Default: now()   | レコード作成日時                          |
 | `is_visible`  | Boolean     | Default: true    | 表示・非表示フラグ                        |

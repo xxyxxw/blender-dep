@@ -93,3 +93,27 @@ values (
   'https://via.placeholder.com/600x400'
 );
 ```
+
+## 5. [NEW] 画像複数枚対応 (Multiple Images)
+
+作品に複数の画像を登録できるように、データベース構造を変更します。
+以下のSQLをSupabaseのSQL Editorで実行してください。
+
+```sql
+-- 1. 新しいカラム (image_urls) を追加
+alter table public.works add column image_urls text[] null;
+
+-- 2. 既存のデータを移行 (image_url -> image_urls の1つ目)
+update public.works set image_urls = array[image_url] where image_url is not null;
+
+-- 3. (任意) 古いカラムを削除
+-- code変更が完了し、動作確認が取れるまでは削除しないことを推奨します。
+-- alter table public.works drop column image_url;
+```
+
+これ以降、データの追加は以下のように行います:
+
+```sql
+insert into public.works (title, image_urls)
+values ('New Work', ARRAY['https://example.com/img1.png', 'https://example.com/img2.png']);
+```

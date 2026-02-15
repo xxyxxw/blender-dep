@@ -3,6 +3,17 @@ import { _supabase } from './supabase.js';
 
 const gallery = document.getElementById('gallery');
 
+// --- Helper: image_urls 配列を安全に取得 (image_url フォールバック付き) ---
+const getImageUrls = (work) => {
+    if (work.image_urls && Array.isArray(work.image_urls) && work.image_urls.length > 0) {
+        return work.image_urls;
+    }
+    if (work.image_url) {
+        return [work.image_url];
+    }
+    return [];
+};
+
 // Date Formatter
 const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -15,30 +26,38 @@ const createWorkCard = (work, observer) => {
     const card = document.createElement('article');
     card.className = 'work-card';
 
-    // Image (Lazy Loaded)
+    const imageUrls = getImageUrls(work);
+    // カードにimage_urls情報を保持
+    card.dataset.imageUrls = JSON.stringify(imageUrls);
+
+    // Image (Lazy Loaded) — サムネイルは1枚目を使用
     const imgContainer = document.createElement('div');
     imgContainer.className = 'work-image-container';
 
+    const thumbnailUrl = imageUrls.length > 0 ? imageUrls[0] : '';
+
     const img = document.createElement('img');
-    img.dataset.src = work.image_url; // Set data-src for Lazy Loading
+    img.dataset.src = thumbnailUrl;
     img.alt = work.title;
     img.className = 'work-image';
-    // img.loading = 'lazy'; // We are using IntersectionObserver, so native lazy is optional but good fallback if JS fails (but we rely on JS for src swap here)
 
-    // Observer for fade-in effect
     img.onload = () => img.classList.add('loaded');
 
-    // Removed immediate src assignment
-    // img.src = work.image_url; 
-
-    if (observer) {
+    if (observer && thumbnailUrl) {
         observer.observe(img);
-    } else {
-        // Fallback if observer not passed (should not happen in this flow)
-        img.src = work.image_url;
+    } else if (thumbnailUrl) {
+        img.src = thumbnailUrl;
     }
 
     imgContainer.appendChild(img);
+
+    // 複数枚バッジ
+    if (imageUrls.length > 1) {
+        const badge = document.createElement('span');
+        badge.className = 'image-count-badge';
+        badge.textContent = imageUrls.length;
+        imgContainer.appendChild(badge);
+    }
 
     // Info
     const info = document.createElement('div');
@@ -102,7 +121,7 @@ const fetchWorks = async () => {
                 }
             });
         }, {
-            rootMargin: '50px 0px', // Load slightly before they come into view
+            rootMargin: '50px 0px',
             threshold: 0.01
         });
 
@@ -123,51 +142,97 @@ document.addEventListener('DOMContentLoaded', () => {
     initLightbox();
 });
 
-// Lightbox Logic
+// --- Lightbox Logic (複数画像ナビゲーション対応) ---
 const initLightbox = () => {
     const lightbox = document.getElementById('lightbox');
     const lightboxImg = document.getElementById('lightbox-img');
     const closeBtn = document.querySelector('.lightbox-close');
+    const prevBtn = document.getElementById('lightbox-prev');
+    const nextBtn = document.getElementById('lightbox-next');
+    const counter = document.getElementById('lightbox-counter');
 
     if (!lightbox || !lightboxImg) return;
 
-    // Delegate click event for dynamically added images
-    gallery.addEventListener('click', (e) => {
-        // Build the path up from the target to find the work-card or verify click area
-        // We want to trigger when the image or card is clicked.
-        // Let's target the card or image wrapper specifically.
-        const card = e.target.closest('.work-card');
-        if (card) {
-            const img = card.querySelector('.work-image');
-            if (img && img.src) {
-                // Determine high-res URL if available, otherwise use current src
-                // In this simple version, we stick to what we have or could use original url from dataset if we stored it
-                lightbox.style.display = 'flex';
-                lightboxImg.src = img.src;
-                lightbox.classList.add('active');
+    let currentImages = [];
+    let currentIndex = 0;
+
+    // ライトボックスに画像をセット
+    const showImage = (index) => {
+        if (currentImages.length === 0) return;
+        currentIndex = index;
+        lightboxImg.src = currentImages[currentIndex];
+
+        // カウンタ表示
+        if (counter) {
+            if (currentImages.length > 1) {
+                counter.textContent = `${currentIndex + 1} / ${currentImages.length}`;
+                counter.style.display = 'block';
+            } else {
+                counter.style.display = 'none';
             }
         }
-    });
 
-    // Close on button click
-    closeBtn.addEventListener('click', () => {
+        // ナビボタン表示制御
+        if (prevBtn) prevBtn.style.display = currentImages.length > 1 ? 'flex' : 'none';
+        if (nextBtn) nextBtn.style.display = currentImages.length > 1 ? 'flex' : 'none';
+    };
+
+    const closeLightbox = () => {
         lightbox.classList.remove('active');
-        setTimeout(() => { lightbox.style.display = 'none'; }, 300); // Wait for transition if any, currently simple display toggle
-    });
+        setTimeout(() => { lightbox.style.display = 'none'; }, 300);
+    };
 
-    // Close on background click
-    lightbox.addEventListener('click', (e) => {
-        if (e.target === lightbox) {
-            lightbox.classList.remove('active');
-            setTimeout(() => { lightbox.style.display = 'none'; }, 300);
+    // カードクリック → ライトボックスを開く
+    gallery.addEventListener('click', (e) => {
+        const card = e.target.closest('.work-card');
+        if (!card) return;
+
+        try {
+            currentImages = JSON.parse(card.dataset.imageUrls || '[]');
+        } catch (_) {
+            currentImages = [];
         }
+        if (currentImages.length === 0) return;
+
+        lightbox.style.display = 'flex';
+        showImage(0);
+        lightbox.classList.add('active');
     });
 
-    // Close on Escape key
+    // 前へ
+    if (prevBtn) {
+        prevBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showImage((currentIndex - 1 + currentImages.length) % currentImages.length);
+        });
+    }
+
+    // 次へ
+    if (nextBtn) {
+        nextBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            showImage((currentIndex + 1) % currentImages.length);
+        });
+    }
+
+    // 閉じる
+    if (closeBtn) closeBtn.addEventListener('click', closeLightbox);
+
+    // 背景クリックで閉じる
+    lightbox.addEventListener('click', (e) => {
+        if (e.target === lightbox) closeLightbox();
+    });
+
+    // キーボード操作
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && lightbox.classList.contains('active')) {
-            lightbox.classList.remove('active');
-            setTimeout(() => { lightbox.style.display = 'none'; }, 300);
+        if (!lightbox.classList.contains('active')) return;
+
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft' && currentImages.length > 1) {
+            showImage((currentIndex - 1 + currentImages.length) % currentImages.length);
+        }
+        if (e.key === 'ArrowRight' && currentImages.length > 1) {
+            showImage((currentIndex + 1) % currentImages.length);
         }
     });
 };
